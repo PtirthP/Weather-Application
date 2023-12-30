@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.3/awesomplete.min.css" rel="stylesheet">
+    <style>
+        body {
+            transition: background-color 0.5s, color 0.5s;
+        }
+
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        body.dark-mode .container {
+            background-color: #2d2d2d;
+        }
+
+        body .container {
+            background-color: #ececec;
+            border-radius: 10px;
+        }
+
+        body.dark-mode input,
+        body.dark-mode button,
+        body.dark-mode select {
+            background-color: #4a4a4a;
+            color: #ffffff;
+        }
+
+        body.dark-mode input::placeholder {
+            color: #b3b3b3;
+        }
+
+        body.dark-mode .weather-card {
+            background-color: #333333;
+        }
+
+        body.dark-mode .weather-card:hover {
+            background-color: #b35555;
+        }
+
+        #themeToggle {
+            background-color: transparent;
+            border: none;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: transparent;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .weather-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+            transition: 0.3s;
+            background-color: #b35555;
+            font-weight: bold;
+        }
+
+        #weatherForecast {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            justify-content: space-between;
+        }
+
+        .weather-card {
+            flex: 1;
+            max-width: calc(20% - 1rem);
+            /* Set a fixed percentage width for each card with gap between them */
+            box-sizing: border-box;
+            /* Include padding and border in the total width */
+            margin: 0;
+            border-radius: 10px;
+            margin-top: 1rem;
+            position: relative;
+        }
+
+        .arrow-down {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: #333;
+            z-index: 1;
+            /* Set the arrow color as needed */
+        }
+
+
+        @media only screen and (max-width: 767px) {
+            body {
+                margin-top: 20px;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            #cityInput {
+                height: 4rem;
+
+            }
+        }
+
+        #cityName {
+            color: #b35555;
+        }
+    </style>
+
+
+
+</head>
+
+<body class="bg-gray-100 dark-mode flex justify-center mt-20 transition-colors duration-500">
+    <div class="flex justify-end mb-4">
+        <button id="themeToggle"
+            class="flex items-center cursor-pointer focus:outline-none text-2xl w-12 h-12 absolute top-4 right-4 transition-transform duration-300">
+            <i id="themeIcon" class="fas fa-sun"></i>
+        </button>
+    </div>
+
+    <div class="container mx-auto p-4 animate-fadeIn ml-2 mr-2 rounded-md shadow-lg">
+        <h1 class="text-3xl font-bold mb-4 mt-4">Weather App</h1>
+        <form id="weatherForm" class="mb-4">
+            <div class="flex items-center mb-4">
+                <input id="cityInput" type="text" placeholder="Enter city name"
+                    class="rounded px-4 py-2 dark-mode:bg-gray-800 dark-mode:text-white">
+                <button type="submit"
+                    class="bg-blue-500 hover:bg-blue-600 text-white rounded px-4 py-2 ml-2 transition-colors duration-300">Get
+                    Weather</button>
+            </div>
+            <div id="error-message"
+                class="text-red-500 text-lg mb-4 font-semibold opacity-0 transition-opacity duration-100"></div>
+        </form>
+
+        <h2 class="text-4xl font-bold mb-2 mt-10" id="cityName"></h2>
+
+        <div id="weatherForecast"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4 animate-fadeInUp">
+            <!-- Weather forecast cards will be dynamically added here -->
+        </div>
+
+        <div id="weatherInfo" class="hidden animate-slideInDown mt-10 ">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col">
+                    <p class="text-2xl mb-1 font-bold">Temperature</p>
+                    <p id="temperature" class="text-md"></p>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-2xl mb-1 font-bold">Humidity</p>
+                    <p id="humidity" class="text-md"></p>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-2xl mb-1 font-bold">High</p>
+                    <p id="high" class="text-md"></p>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-2xl mb-1 font-bold">Low</p>
+                    <p id="low" class="text-md"></p>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-2xl mb-1 font-bold">Rain Precipitaion</p>
+                    <p id="rainPrediction" class="text-md"></p>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-2xl mb-1 font-bold">Wind Speed</p>
+                    <p id="windSpeed" class="text-md"></p>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-2xl mb-1 font-bold">Cloudiness</p>
+                    <p id="cloudiness" class="text-md"></p>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-2xl mb-1 font-bold">Pressure</p>
+                    <p id="pressure" class="text-md"></p>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-2xl mb-1 font-bold">Sunrise</p>
+                    <p id="sunrise" class="text-md"></p>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-2xl mb-1 font-bold">Sunset</p>
+                    <p id="sunset" class="text-md"></p>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-2xl mb-1 font-bold">Weather Condition</p>
+                    <p id="weatherCondition" class="text-md"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p>Created by <a href="https://tirthpatel.space" target="_blank" rel="noopener noreferrer">Tirth Patel</a></p>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"
+        integrity="sha512-v4ELrrjeMaz4Ibf6U1UDKsTmNJSnWff/ARzxf1FbNz9dBZc5l9YWUqLjdt+gm/8VSFtQ8OeqMWdgBEhtMtQOEg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+
+        function showError(message) {
+            const errorMessageElement = document.getElementById('error-message');
+            errorMessageElement.textContent = message;
+            errorMessageElement.style.opacity = message ? '1' : '0'; // Update opacity based on the presence of a message
+        }
+
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const body = document.body;
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            const isDarkMode = body.classList.contains('dark-mode');
+            themeIcon.className = isDarkMode ? 'far fa-moon' : 'fas fa-sun';
+
+            // Update arrow color on theme toggle
+            const arrowColor = isDarkMode ? '#ffffff' : '#333333';
+            const arrowIcons = document.querySelectorAll('.arrow-down i');
+            arrowIcons.forEach(icon => {
+                icon.style.color = arrowColor;
+            });
+        });
+
+        const weatherForm = document.getElementById('weatherForm');
+        const cityInput = document.getElementById('cityInput');
+        const weatherInfo = document.getElementById('weatherInfo');
+        const weatherForecast = document.getElementById('weatherForecast');
+        const cityName = document.getElementById('cityName');
+        const temperature = document.getElementById('temperature');
+        const humidity = document.getElementById('humidity');
+        const high = document.getElementById('high');
+        const low = document.getElementById('low');
+        const rainPrediction = document.getElementById('rainPrediction');
+
+
+        weatherForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const city = cityInput.value;
+
+            // Validate the city input
+            if (!city.trim()) {
+                showError('Please enter a city name');
+            } else {
+                // Clear error message
+                showError('');
+                getWeather(city);
+                getWeatherForecast(city);
+            }
+        });
+
+        async function getWeather(city) {
+            const apiKey = '246ce02daeb203ef78f8ec4457ec22c8';
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (response.ok) {
+                    displayWeather(data);
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error(error);
+                showError('Enter a valid city name. Please try again.');
+            }
+        }
+
+        async function getWeatherForecast(city) {
+            const apiKey = '246ce02daeb203ef78f8ec4457ec22c8';
+            const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (response.ok) {
+                    displayWeatherForecast(data.list);
+                } else {
+                    console.error(data);
+                    // Remove the alert since the error may occur due to limited forecast data in the free OpenWeatherMap API.
+                }
+            } catch (error) {
+                console.error(error);
+                // Remove the alert since the error may occur due to limited forecast data in the free OpenWeatherMap API.
+            }
+        }
+
+        function displayWeather(data) {
+            cityName.textContent = data.name;
+            temperature.textContent = `${Math.round(data.main.temp)}°C / ${Math.round(data.main.temp * 9 / 5 + 32)}°F`;
+            humidity.textContent = `${data.main.humidity}%`;
+            high.textContent = `${Math.round(data.main.temp_max)}°C / ${Math.round(data.main.temp_max * 9 / 5 + 32)}°F`; // Round the high temperature
+            low.textContent = `${Math.round(data.main.temp_min)}°C / ${Math.round(data.main.temp_min * 9 / 5 + 32)}°F`; // Round the low temperature
+
+            // Check if precipitation data is available
+            if (data.rain && data.rain['1h']) {
+                rainPrediction.textContent = `Rain in the last hour: ${data.rain['1h']} mm`;
+            } else {
+                rainPrediction.textContent = 'No recent rain';
+            }
+
+
+            windSpeed.textContent = `${data.wind.speed} m/s`;
+            cloudiness.textContent = `${data.clouds.all}%`;
+
+            // Additional Weather Information
+            pressure.textContent = `${data.main.pressure} hPa`;
+            sunrise.textContent = new Date(data.sys.sunrise * 1000).toLocaleTimeString();
+            sunset.textContent = new Date(data.sys.sunset * 1000).toLocaleTimeString();
+            weatherCondition.textContent = data.weather[0].description;
+
+            weatherInfo.classList.remove('hidden');
+        }
+
+        function displayWeatherForecast(forecastData) {
+            weatherForecast.innerHTML = ''; // Clear previous forecast cards
+
+            // Filter out the daily forecast data
+            const dailyForecast = forecastData.filter((forecast, index) => index % 8 === 0 && index < 8 * 7);
+
+            for (const forecast of dailyForecast) {
+                const card = createWeatherCard(forecast);
+                weatherForecast.appendChild(card);
+            }
+        }
+
+        function createWeatherCard(data) {
+            const card = document.createElement('div');
+            card.classList.add('weather-card', 'p-4', 'rounded', 'bg-white', 'dark-mode:bg-gray-800', 'shadow-md', 'transition-shadow', 'duration-300');
+
+            const date = new Date(data.dt * 1000);
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            const dateString = date.toLocaleDateString('en-US', options);
+
+            // Use the appropriate Font Awesome class for the weather condition
+            const iconClass = getFontAwesomeIconClass(data.weather[0].id);
+            // Set the color based on the weather condition
+            const iconColor = getIconColor(data.weather[0].id);
+
+            card.innerHTML = `
+        <h3 class="text-lg font-bold mb-2">${dateString}</h3>
+        <i class="${iconClass} text-4xl mb-6 mt-3" style="color: ${iconColor};"></i>
+        <p class="text-sm">${data.weather[0].description}</p>
+        <p class="text-sm">Temp: ${Math.round(data.main.temp)}°C / ${Math.round(data.main.temp * 9 / 5 + 32)}°F</p>
+        <p class="text-sm">Humidity: ${data.main.humidity}%</p>
+        <div class="arrow-down cursor-pointer">
+           <i class="fas fa-caret-down"></i>
+       </div>
+    `;
+
+            return card;
+        }
+
+        function getIconColor(weatherCode) {
+            const isDarkMode = document.body.classList.contains('dark-mode');
+
+            // Define colors for different weather conditions
+            const colorMappings = {
+                200: isDarkMode ? '#FFD700' : '#333333', // Thunderstorm with light rain
+                201: isDarkMode ? '#FFD700' : '#333333', // Thunderstorm with rain
+                202: isDarkMode ? '#FFD700' : '#333333', // Thunderstorm with heavy rain
+                210: isDarkMode ? '#FFD700' : '#333333', // Light thunderstorm
+                211: isDarkMode ? '#FFD700' : '#333333', // Thunderstorm
+                212: isDarkMode ? '#FFD700' : '#333333', // Heavy thunderstorm
+                221: isDarkMode ? '#FFD700' : '#333333', // Ragged thunderstorm
+                600: isDarkMode ? '#87CEEB' : '#1D6684', // Light Snow
+                500: isDarkMode ? '#87CEEB' : '#1D6684', // Light Rain
+                // Add more color mappings for other weather conditions
+                // ...
+                800: isDarkMode ? '#FFD700' : '#FFD700', // Clear sky
+                801: isDarkMode ? '#87CEEB' : '#87CEEB', // Few clouds
+                802: isDarkMode ? '#87CEEB' : '#333333', // Scattered clouds
+                803: isDarkMode ? '#87CEEB' : '#333333', // Broken clouds
+                804: isDarkMode ? '#87CEEB' : '#333333', // Overcast clouds
+            };
+
+            return colorMappings[weatherCode] || '#333333'; // Default to a neutral color if no match
+        }
+
+
+        function getFontAwesomeIconClass(weatherCode) {
+            // Map OpenWeatherMap weather codes to corresponding Font Awesome classes
+            const weatherCodeMappings = {
+                200: 'fas fa-bolt',      // Thunderstorm with light rain
+                201: 'fas fa-bolt',      // Thunderstorm with rain
+                202: 'fas fa-bolt',      // Thunderstorm with heavy rain
+                210: 'fas fa-bolt',      // Light thunderstorm
+                211: 'fas fa-bolt',      // Thunderstorm
+                212: 'fas fa-bolt',      // Heavy thunderstorm
+                221: 'fas fa-bolt',      // Ragged thunderstorm
+                230: 'fas fa-bolt',      // Thunderstorm with light drizzle
+                231: 'fas fa-bolt',      // Thunderstorm with drizzle
+                232: 'fas fa-bolt',      // Thunderstorm with heavy drizzle
+                300: 'fas fa-cloud-rain',   // Light intensity drizzle
+                301: 'fas fa-cloud-rain',   // Drizzle
+                302: 'fas fa-cloud-rain',   // Heavy intensity drizzle
+                310: 'fas fa-cloud-rain',   // Light intensity drizzle rain
+                311: 'fas fa-cloud-rain',   // Drizzle rain
+                312: 'fas fa-cloud-rain',   // Heavy intensity drizzle rain
+                313: 'fas fa-cloud-showers-heavy',  // Shower rain and drizzle
+                314: 'fas fa-cloud-showers-heavy',  // Heavy shower rain and drizzle
+                321: 'fas fa-cloud-showers-heavy',  // Shower drizzle
+                500: 'fas fa-cloud-showers-heavy',  // Light rain
+                501: 'fas fa-cloud-showers-heavy',  // Moderate rain
+                502: 'fas fa-cloud-showers-heavy',  // Heavy intensity rain
+                503: 'fas fa-cloud-showers-heavy',  // Very heavy rain
+                504: 'fas fa-cloud-showers-heavy',  // Extreme rain
+                511: 'fas fa-snowflake',   // Freezing rain
+                520: 'fas fa-cloud-rain',   // Light intensity shower rain
+                521: 'fas fa-cloud-rain',   // Shower rain
+                522: 'fas fa-cloud-rain',   // Heavy intensity shower rain
+                531: 'fas fa-cloud-rain',   // Ragged shower rain
+                600: 'fas fa-snowflake',   // Light snow
+                601: 'fas fa-snowflake',   // Snow
+                602: 'fas fa-snowflake',   // Heavy snow
+                611: 'fas fa-snowflake',   // Sleet
+                612: 'fas fa-snowflake',   // Light shower sleet
+                613: 'fas fa-snowflake',   // Shower sleet
+                615: 'fas fa-snowflake',   // Light rain and snow
+                616: 'fas fa-snowflake',   // Rain and snow
+                620: 'fas fa-snowflake',   // Light shower snow
+                621: 'fas fa-snowflake',   // Shower snow
+                622: 'fas fa-snowflake',   // Heavy shower snow
+                701: 'fas fa-smog',       // Mist
+                711: 'fas fa-smog',       // Smoke
+                721: 'fas fa-smog',       // Haze
+                731: 'fas fa-dust',       // Dust or sand
+                741: 'fas fa-fog',        // Fog
+                751: 'fas fa-dust',       // Sand
+                761: 'fas fa-dust',       // Dust
+                762: 'fas fa-dust',       // Volcanic ash
+                771: 'fas fa-wind',       // Squalls
+                781: 'fas fa-tornado',    // Tornado
+                800: 'fas fa-sun',        // Clear sky
+                801: 'fas fa-cloud-sun',  // Few clouds
+                802: 'fas fa-cloud',      // Scattered clouds
+                803: 'fas fa-cloud',      // Broken clouds
+                804: 'fas fa-cloud',      // Overcast clouds
+            };
+
+            return weatherCodeMappings[weatherCode] || 'fas fa-question'; // Default to question mark if no match
+        }
+
+
+
+        function getDetailedWeatherInfo(cityId) {
+            const apiKey = '246ce02daeb203ef78f8ec4457ec22c8';
+            const url = `https://api.openweathermap.org/data/2.5/weather?id=${cityId}&appid=${apiKey}&units=metric`;
+
+            return fetch(url)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch detailed weather information');
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    // Add Fahrenheit temperature to the data object
+                    data.fahrenheitTemp = Math.round(data.main.temp * 9 / 5 + 32);
+                    return data;
+                });
+        }
+
+        function clearCardDetailedInfo(card) {
+            const detailedInfo = card.querySelector('.detailed-info');
+            if (detailedInfo) {
+                detailedInfo.remove();
+            }
+        }
+
+    </script>
+</body>
+
+</html>
