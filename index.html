@@ -59,6 +59,7 @@
             background-color: transparent;
             text-align: center;
             padding: 10px;
+            opacity: 30%;
         }
 
         .weather-card:hover {
@@ -115,7 +116,22 @@
 
         #cityName {
             color: #b35555;
+            font-size: 3rem;
         }
+
+        #hourlyForecastWrapper {
+            overflow-x: auto;
+        }
+
+        #hourlyForecast {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-start;
+
+            /* Adjust as needed based on your layout preference */
+        }
+
+        /* Existing styles for .weather-card can be applied to hourly cards as well */
     </style>
 
 
@@ -147,11 +163,17 @@
                 class="text-red-500 text-lg mb-4 font-semibold opacity-0 transition-opacity duration-100"></div>
         </form>
 
-        <h2 class="text-4xl font-bold mb-2 mt-10" id="cityName"></h2>
+        <h1 class="font-bold mt-2" id="cityName"></h1>
 
         <div id="weatherForecast"
             class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4 animate-fadeInUp">
             <!-- Weather forecast cards will be dynamically added here -->
+        </div>
+
+        <div id="hourlyForecastWrapper" class="overflow-x-auto pb-2">
+            <div id="hourlyForecast" class="flex gap-4 mt-4 animate-fadeInUp">
+                <!-- Hourly forecast cards will be dynamically added here -->
+            </div>
         </div>
 
         <div id="weatherInfo" class="hidden animate-slideInDown mt-10 ">
@@ -189,19 +211,13 @@
                     <p id="pressure" class="text-md"></p>
                 </div>
                 <div class="flex flex-col">
-                    <p class="text-2xl mb-1 font-bold">Sunrise</p>
-                    <p id="sunrise" class="text-md"></p>
-                </div>
-                <div class="flex flex-col">
-                    <p class="text-2xl mb-1 font-bold">Sunset</p>
-                    <p id="sunset" class="text-md"></p>
-                </div>
-                <div class="flex flex-col">
                     <p class="text-2xl mb-1 font-bold">Weather Condition</p>
                     <p id="weatherCondition" class="text-md"></p>
                 </div>
             </div>
         </div>
+
+
     </div>
     <footer>
         <p>Created by <a href="https://tirthpatel.space" target="_blank" rel="noopener noreferrer">Tirth Patel</a></p>
@@ -271,7 +287,9 @@
                 const response = await fetch(url);
                 const data = await response.json();
                 if (response.ok) {
+                    const selectedDate = data.dt ? new Date(data.dt * 1000).toISOString().split('T')[0] : '';
                     displayWeather(data);
+                    getHourlyForecast(city, selectedDate); // Fetch hourly forecast data with selected date
                 } else {
                     throw new Error(data.message);
                 }
@@ -320,8 +338,6 @@
 
             // Additional Weather Information
             pressure.textContent = `${data.main.pressure} hPa`;
-            sunrise.textContent = new Date(data.sys.sunrise * 1000).toLocaleTimeString();
-            sunset.textContent = new Date(data.sys.sunset * 1000).toLocaleTimeString();
             weatherCondition.textContent = data.weather[0].description;
 
             weatherInfo.classList.remove('hidden');
@@ -343,9 +359,10 @@
             const card = document.createElement('div');
             card.classList.add('weather-card', 'p-4', 'rounded', 'bg-white', 'dark-mode:bg-gray-800', 'shadow-md', 'transition-shadow', 'duration-300');
 
-            // ... (your existing code)
 
+            // Add the date as a data attribute
             const date = new Date(data.dt * 1000);
+            card.setAttribute('data-date', date.toISOString().split('T')[0]);
             const options = { weekday: 'short', month: 'short', day: 'numeric' };
             const dateString = date.toLocaleDateString('en-US', options);
 
@@ -353,6 +370,8 @@
             const iconClass = getFontAwesomeIconClass(data.weather[0].id);
             // Set the color based on the weather condition
             const iconColor = getIconColor(data.weather[0].id);
+
+
 
             card.innerHTML = `
         <h3 class="text-lg font-bold mb-2">${dateString}</h3>
@@ -392,9 +411,9 @@
                 // ...
                 800: isDarkMode ? '#FFD700' : '#FFD700', // Clear sky
                 801: isDarkMode ? '#87CEEB' : '#87CEEB', // Few clouds
-                802: isDarkMode ? '#87CEEB' : '#333333', // Scattered clouds
-                803: isDarkMode ? '#87CEEB' : '#333333', // Broken clouds
-                804: isDarkMode ? '#87CEEB' : '#333333', // Overcast clouds
+                802: isDarkMode ? '#87CEEB' : '#87CEEB', // Scattered clouds
+                803: isDarkMode ? '#87CEEB' : '#87CEEB', // Broken clouds
+                804: isDarkMode ? '#87CEEB' : '#87CEEB', // Overcast clouds
             };
 
             return colorMappings[weatherCode] || '#333333'; // Default to a neutral color if no match
@@ -491,18 +510,17 @@
             }
         }
 
-        ////////////////
-
         function displayDetailedWeatherInfo(data) {
             // Update specific fields in the weatherInfo div
             updateWeatherInfoField('temperature', `${Math.round(data.main.temp)}°C / ${Math.round(data.main.temp * 9 / 5 + 32)}°F`);
-            updateWeatherInfoField('humidity', `Humidity: ${data.main.humidity}%`);
-            updateWeatherInfoField('high', `High: ${Math.round(data.main.temp_max)}°C / ${Math.round(data.main.temp_max * 9 / 5 + 32)}°F`);
-            updateWeatherInfoField('low', `Low: ${Math.round(data.main.temp_min)}°C / ${Math.round(data.main.temp_min * 9 / 5 + 32)}°F`);
-            updateWeatherInfoField('weatherCondition', `Weather Condition: ${data.weather[0].description}`);
-            updateWeatherInfoField('windSpeed', `Wind Speed: ${data.wind.speed} m/s`);
-            updateWeatherInfoField('cloudiness', `Cloudiness: ${data.clouds.all}%`);
-            // Add more fields as needed
+            updateWeatherInfoField('humidity', `${data.main.humidity}%`);
+            updateWeatherInfoField('high', `${Math.round(data.main.temp_max)}°C / ${Math.round(data.main.temp_max * 9 / 5 + 32)}°F`);
+            updateWeatherInfoField('low', `${Math.round(data.main.temp_min)}°C / ${Math.round(data.main.temp_min * 9 / 5 + 32)}°F`);
+            updateWeatherInfoField('weatherCondition', `${data.weather[0].description}`);
+            updateWeatherInfoField('windSpeed', `${data.wind.speed} m/s`);
+            updateWeatherInfoField('cloudiness', `${data.clouds.all}%`);
+            updateWeatherInfoField('pressure', `Pressure: ${data.main.pressure} hPa`);
+
         }
 
         // Function to update a specific field in the weatherInfo div
@@ -512,6 +530,102 @@
                 fieldElement.textContent = content;
             }
         }
+
+        // Function to format time (assuming timestamp is in seconds)
+        function formatTime(timestamp) {
+            if (timestamp) {
+                const date = new Date(timestamp * 1000);
+                return date.toLocaleTimeString();
+            }
+            return 'Not available';
+        }
+
+        ///////////////////////
+
+        async function getHourlyForecast(city, selectedDate) {
+            const apiKey = '246ce02daeb203ef78f8ec4457ec22c8';
+            const url = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                if (response.ok) {
+                    displayHourlyForecast(data.list, selectedDate);
+                } else {
+                    console.error(data);
+                    // Handle the error
+                }
+            } catch (error) {
+                console.error(error);
+                // Handle the error
+            }
+        }
+
+        function displayHourlyForecast(hourlyForecastData, selectedDate) {
+            const hourlyForecastContainer = document.getElementById('hourlyForecast');
+            hourlyForecastContainer.innerHTML = ''; // Clear previous hourly forecast cards
+
+            // Filter hourly data for the selected date
+            const filteredHourlyForecast = hourlyForecastData.filter((forecast) => {
+                const forecastDate = new Date(forecast.dt * 1000);
+                const forecastDateString = forecastDate.toISOString().split('T')[0];
+                return forecastDateString === selectedDate;
+            });
+
+            // Sort the filtered hourly data by timestamp
+            filteredHourlyForecast.sort((a, b) => a.dt - b.dt);
+
+            for (const forecast of filteredHourlyForecast) {
+                const card = createHourlyWeatherCard(forecast);
+                hourlyForecastContainer.appendChild(card);
+            }
+        }
+
+
+        function formatTime(timestamp) {
+            if (timestamp) {
+                const date = new Date(timestamp * 1000);
+                return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+            }
+            return 'Not available';
+        }
+
+        // Update the createHourlyWeatherCard function
+        function createHourlyWeatherCard(data) {
+            const card = document.createElement('div');
+            card.classList.add('weather-card', 'p-4', 'rounded', 'bg-white', 'dark-mode:bg-gray-800', 'shadow-md', 'transition-shadow', 'duration-300');
+
+            // Use the appropriate Font Awesome class for the weather condition
+            const iconClass = getFontAwesomeIconClass(data.weather[0].id);
+
+            const date = new Date(data.dt * 1000);
+            const dateString = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+            card.innerHTML = `
+        <h3 class="text-sm font-bold mb-2">${dateString}</h3>
+        <h4 class="text-xs mb-2">${formatTime(data.dt)}</h4>
+        <i class="${iconClass} text-xl mb-4 mt-3" style="color: ${getIconColor(data.weather[0].id)};"></i>
+        <p class="text-xs">${data.weather[0].description}</p>
+        <p class="text-xs">Temp: ${Math.round(data.main.temp_min)}°C - ${Math.round(data.main.temp_max)}°C</p>
+    `;
+
+            card.addEventListener('click', () => {
+                // Increment the click counter and update the textbox value
+                clickCounter.value = parseInt(clickCounter.value, 10) + 1;
+            });
+
+            return card;
+        }
+
+        /////////
+
+        weatherForecast.addEventListener('click', (event) => {
+            const selectedCard = event.target.closest('.weather-card');
+            if (selectedCard) {
+                const selectedDate = selectedCard.getAttribute('data-date');
+                getHourlyForecast(cityInput.value, selectedDate);
+            }
+        });
 
     </script>
 </body>
