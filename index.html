@@ -139,6 +139,9 @@
                 <button type="submit"
                     class="bg-blue-500 hover:bg-blue-600 text-white rounded px-4 py-2 ml-2 transition-colors duration-300">Get
                     Weather</button>
+                <input type="text" id="clickCounter"
+                    class="rounded px-2 py-2 ml-2 dark-mode:bg-gray-800 dark-mode:text-white w-12 text-center" value="0"
+                    readonly>
             </div>
             <div id="error-message"
                 class="text-red-500 text-lg mb-4 font-semibold opacity-0 transition-opacity duration-100"></div>
@@ -340,6 +343,8 @@
             const card = document.createElement('div');
             card.classList.add('weather-card', 'p-4', 'rounded', 'bg-white', 'dark-mode:bg-gray-800', 'shadow-md', 'transition-shadow', 'duration-300');
 
+            // ... (your existing code)
+
             const date = new Date(data.dt * 1000);
             const options = { weekday: 'short', month: 'short', day: 'numeric' };
             const dateString = date.toLocaleDateString('en-US', options);
@@ -359,6 +364,12 @@
            <i class="fas fa-caret-down"></i>
        </div>
     `;
+
+            card.addEventListener('click', () => {
+                // Increment the click counter and update the textbox value
+                clickCounter.value = parseInt(clickCounter.value, 10) + 1;
+                displayDetailedWeatherInfo(data, weatherInfo);
+            });
 
             return card;
         }
@@ -477,6 +488,28 @@
             const detailedInfo = card.querySelector('.detailed-info');
             if (detailedInfo) {
                 detailedInfo.remove();
+            }
+        }
+
+        ////////////////
+
+        function displayDetailedWeatherInfo(data) {
+            // Update specific fields in the weatherInfo div
+            updateWeatherInfoField('temperature', `${Math.round(data.main.temp)}°C / ${Math.round(data.main.temp * 9 / 5 + 32)}°F`);
+            updateWeatherInfoField('humidity', `Humidity: ${data.main.humidity}%`);
+            updateWeatherInfoField('high', `High: ${Math.round(data.main.temp_max)}°C / ${Math.round(data.main.temp_max * 9 / 5 + 32)}°F`);
+            updateWeatherInfoField('low', `Low: ${Math.round(data.main.temp_min)}°C / ${Math.round(data.main.temp_min * 9 / 5 + 32)}°F`);
+            updateWeatherInfoField('weatherCondition', `Weather Condition: ${data.weather[0].description}`);
+            updateWeatherInfoField('windSpeed', `Wind Speed: ${data.wind.speed} m/s`);
+            updateWeatherInfoField('cloudiness', `Cloudiness: ${data.clouds.all}%`);
+            // Add more fields as needed
+        }
+
+        // Function to update a specific field in the weatherInfo div
+        function updateWeatherInfoField(fieldId, content) {
+            const fieldElement = document.getElementById(fieldId);
+            if (fieldElement) {
+                fieldElement.textContent = content;
             }
         }
 
