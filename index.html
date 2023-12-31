@@ -561,25 +561,6 @@
             }
         }
 
-        function displayHourlyForecast(hourlyForecastData, selectedDate) {
-            const hourlyForecastContainer = document.getElementById('hourlyForecast');
-            hourlyForecastContainer.innerHTML = ''; // Clear previous hourly forecast cards
-
-            // Filter hourly data for the selected date
-            const filteredHourlyForecast = hourlyForecastData.filter((forecast) => {
-                const forecastDate = new Date(forecast.dt * 1000);
-                const forecastDateString = forecastDate.toISOString().split('T')[0];
-                return forecastDateString === selectedDate;
-            });
-
-            // Sort the filtered hourly data by timestamp
-            filteredHourlyForecast.sort((a, b) => a.dt - b.dt);
-
-            for (const forecast of filteredHourlyForecast) {
-                const card = createHourlyWeatherCard(forecast);
-                hourlyForecastContainer.appendChild(card);
-            }
-        }
 
 
         function formatTime(timestamp) {
@@ -590,10 +571,30 @@
             return 'Not available';
         }
 
+        function displayHourlyForecast(hourlyForecastData, selectedDate) {
+            const hourlyForecastContainer = document.getElementById('hourlyForecast');
+            hourlyForecastContainer.innerHTML = ''; // Clear previous hourly forecast cards
+
+            // Filter hourly data for the selected date without considering the time
+            const filteredHourlyForecast = hourlyForecastData.filter((forecast) => {
+                const forecastDate = new Date(forecast.dt * 1000);
+                const forecastDateString = forecastDate.toISOString().split('T')[0];
+                return forecastDateString === selectedDate;
+            });
+
+            for (const forecast of filteredHourlyForecast) {
+                const card = createHourlyWeatherCard(forecast);
+                hourlyForecastContainer.appendChild(card);
+            }
+        }
+
         // Update the createHourlyWeatherCard function
         function createHourlyWeatherCard(data) {
             const card = document.createElement('div');
             card.classList.add('weather-card', 'p-4', 'rounded', 'bg-white', 'dark-mode:bg-gray-800', 'shadow-md', 'transition-shadow', 'duration-300');
+
+            // Add the data-hour attribute to the card
+            card.setAttribute('data-hour', formatTime(data.dt));
 
             // Use the appropriate Font Awesome class for the weather condition
             const iconClass = getFontAwesomeIconClass(data.weather[0].id);
@@ -612,12 +613,14 @@
             card.addEventListener('click', () => {
                 // Increment the click counter and update the textbox value
                 clickCounter.value = parseInt(clickCounter.value, 10) + 1;
+                // Pass the data to displayHourlyDetailedWeatherInfo
+                displayHourlyDetailedWeatherInfo(data);
             });
 
             return card;
         }
 
-        /////////
+
 
         weatherForecast.addEventListener('click', (event) => {
             const selectedCard = event.target.closest('.weather-card');
@@ -626,6 +629,19 @@
                 getHourlyForecast(cityInput.value, selectedDate);
             }
         });
+
+        function displayHourlyDetailedWeatherInfo(selectedHourData) {
+            // Update specific fields in the weatherInfo div using selectedHourData
+            updateWeatherInfoField('temperature', `${Math.round(selectedHourData.main.temp)}°C / ${Math.round(selectedHourData.main.temp * 9 / 5 + 32)}°F`);
+            updateWeatherInfoField('humidity', `${selectedHourData.main.humidity}%`);
+            updateWeatherInfoField('high', `${Math.round(selectedHourData.main.temp_max)}°C / ${Math.round(selectedHourData.main.temp_max * 9 / 5 + 32)}°F`);
+            updateWeatherInfoField('low', `${Math.round(selectedHourData.main.temp_min)}°C / ${Math.round(selectedHourData.main.temp_min * 9 / 5 + 32)}°F`);
+            updateWeatherInfoField('weatherCondition', `${selectedHourData.weather[0].description}`);
+            updateWeatherInfoField('windSpeed', `${selectedHourData.wind.speed} m/s`);
+            updateWeatherInfoField('cloudiness', `${selectedHourData.clouds.all}%`);
+            updateWeatherInfoField('pressure', `Pressure: ${selectedHourData.main.pressure} hPa`);
+        }
+
 
     </script>
 </body>
